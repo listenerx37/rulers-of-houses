@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rahu by Ascendant, Sign, and House</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --panel: #171a23;
+      --panel2: #1f2430;
+      --text: #eef1f7;
+      --muted: #aab2c4;
+      --line: #303748;
+      --accent: #9f7aea;
+      --accent2: #63b3ed;
+      --good: #68d391;
+      --warn: #f6ad55;
+      --bad: #fc8181;
+      --neutral: #cbd5e0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, rgba(159,122,234,.22), transparent 34%), var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 28px;
+    }
+
+    .wrap { max-width: 1220px; margin: 0 auto; }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: flex-end;
+      margin-bottom: 22px;
+    }
+
+    h1 { margin: 0 0 8px; font-size: clamp(1.7rem, 3vw, 2.8rem); letter-spacing: -0.04em; }
+    .subtitle { color: var(--muted); max-width: 760px; margin: 0; }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(190px, 1fr));
+      gap: 14px;
+      background: rgba(23,26,35,.86);
+      border: 1px solid var(--line);
+      padding: 16px;
+      border-radius: 18px;
+      margin-bottom: 18px;
+      backdrop-filter: blur(10px);
+    }
+
+    label { display: block; font-size: .82rem; color: var(--muted); margin-bottom: 7px; }
+
+    select {
+      width: 100%;
+      background: var(--panel2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+
+
+    .planet-panel {
+      background: rgba(23,26,35,.9);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.18);
+    }
+
+    .planet-panel h2 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+      color: var(--text);
+    }
+
+    .planet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+    }
+
+    .planet-card {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 11px 12px;
+    }
+
+    .planet-card strong { display: block; margin-bottom: 4px; }
+    .planet-card .kind { font-size: .9rem; }
+    .planet-card .why { color: var(--muted); font-size: .82rem; margin-top: 4px; }
+    .planet-card.benefic { border-color: rgba(104,211,145,.38); }
+    .planet-card.malefic { border-color: rgba(252,129,129,.38); }
+    .planet-card.neutralp { border-color: rgba(203,213,224,.32); }
+    .planet-card.mixedp { border-color: rgba(246,173,85,.38); }
+
+    .grid { display: grid; grid-template-columns: 1.25fr .95fr; gap: 18px; }
+
+    .card {
+      background: rgba(23,26,35,.9);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 18px 60px rgba(0,0,0,.22);
+    }
+
+    .card h2 { margin: 0; font-size: 1.05rem; padding: 16px 18px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.025); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { text-align: left; color: var(--muted); font-weight: 650; font-size: .82rem; letter-spacing: .02em; text-transform: uppercase; }
+    td { color: var(--text); }
+    tr.active { background: rgba(159,122,234,.13); }
+    tr.active td:first-child { border-left: 4px solid var(--accent); }
+
+    .summary { padding: 18px; }
+    .pillrow { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .pill { border: 1px solid var(--line); background: var(--panel2); padding: 7px 10px; border-radius: 999px; font-size: .86rem; color: var(--neutral); }
+    .pill.good { color: var(--good); border-color: rgba(104,211,145,.35); }
+    .pill.warn { color: var(--warn); border-color: rgba(246,173,85,.35); }
+    .pill.bad { color: var(--bad); border-color: rgba(252,129,129,.35); }
+    .pill.accent { color: var(--accent2); border-color: rgba(99,179,237,.35); }
+
+    .scorebox {
+      display: grid;
+      grid-template-columns: 94px 1fr;
+      gap: 14px;
+      align-items: center;
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .score {
+      width: 76px; height: 76px; border-radius: 50%;
+      display: grid; place-items: center;
+      background: conic-gradient(var(--accent) calc(var(--score) * 1%), rgba(255,255,255,.08) 0);
+      position: relative;
+      font-weight: 800;
+    }
+    .score:before { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: var(--panel2); }
+    .score span { position: relative; z-index: 1; }
+
+    .section { margin: 16px 0 0; }
+    .section h3 { margin: 0 0 7px; font-size: .98rem; color: var(--accent2); }
+    .section p { margin: 0; color: var(--muted); }
+    .note { font-size: .86rem; color: var(--muted); padding: 14px 18px 18px; border-top: 1px solid var(--line); }
+
+    @media (max-width: 860px) {
+      body { padding: 16px; }
+      header, .grid { display: block; }
+      .controls { grid-template-columns: 1fr; }
+      .card { margin-bottom: 16px; }
+      th:nth-child(4), td:nth-child(4) { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Rahu Strength & Behavior Table</h1>
+        <p class="subtitle">Select an ascendant, Rahu sign, and Rahu house. The page maps house rulerships and generates a practical Vedic-style summary of how Rahu may behave.</p>
+      </div>
+    </header>
+
+    <section class="controls">
+      <div>
+        <label for="ascendant">Ascendant</label>
+        <select id="ascendant"></select>
+      </div>
+      <div>
+        <label for="rahuSign">Rahu Sign</label>
+        <select id="rahuSign"></select>
+      </div>
+      <div>
+        <label for="rahuHouse">House Rahu Lives In</label>
+        <select id="rahuHouse"></select>
+      </div>
+    </section>
+
+    <section class="planet-panel">
+      <h2 id="planetTitle">Functional planet strength</h2>
+      <div class="planet-grid" id="planetStrengths"></div>
+    </section>
+
+
+    <main class="grid">
+      <section class="card">
+        <h2 id="tableTitle">House rulerships</h2>
+        <table>
+          <thead>
+            <tr><th>House</th><th>Sign</th><th>Theme</th><th>Ruler</th></tr>
+          </thead>
+          <tbody id="houseTable"></tbody>
+        </table>
+      </section>
+
+      <aside class="card">
+        <h2>Rahu interpretation</h2>
+        <div class="summary" id="summary"></div>
+        <div class="note">This is a generalized whole-sign Vedic astrology reference. Functional benefic/malefic status varies by tradition. Final judgment depends on nakshatra, dispositor strength, aspects, conjunctions, dasha, divisional charts, and dignity of the house lord.</div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const signs = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+    const rulers = { Aries:"Mars", Taurus:"Venus", Gemini:"Mercury", Cancer:"Moon", Leo:"Sun", Virgo:"Mercury", Libra:"Venus", Scorpio:"Mars", Sagittarius:"Jupiter", Capricorn:"Saturn", Aquarius:"Saturn", Pisces:"Jupiter" };
+    const houseThemes = {
+      1:"self, body, identity, temperament", 2:"money, speech, food, family, values", 3:"effort, writing, courage, siblings, skills", 4:"home, mother, property, emotional roots", 5:"creativity, romance, children, intelligence", 6:"work, service, conflict, debts, health routines", 7:"marriage, partnership, clients, public dealings", 8:"crisis, secrets, transformation, joint resources", 9:"luck, dharma, teachers, belief, higher learning", 10:"career, status, authority, visibility", 11:"gains, networks, friends, audience, ambitions", 12:"loss, isolation, foreign places, sleep, liberation"
+    };
+    const houseStrength = {
+      1:[67,"Strong but restless","Rahu amplifies identity, hunger, image, and personal reinvention. Powerful for visibility, but can create self-obsession or dissatisfaction."],
+      2:[54,"Mixed","Rahu intensifies money, speech, family karma, and appetite. It can produce unusual earnings, persuasive speech, or value confusion."],
+      3:[82,"Strong","Rahu does well in the 3rd because it rewards courage, media, writing, risk-taking, and self-made effort."],
+      4:[43,"Weak to mixed","Rahu disturbs inner peace, home stability, and emotional rootedness. It can bring unusual homes, relocation, or foreign property themes."],
+      5:[48,"Mixed","Rahu makes creativity, romance, recognition, speculation, or children karmically charged. It can be brilliant but obsessive."],
+      6:[86,"Strong","Rahu can perform well in the 6th because it fights enemies, solves problems, and survives difficult environments."],
+      7:[50,"Mixed","Rahu magnifies partnership hunger, public appeal, and unconventional relationships. It may create projection or dissatisfaction in marriage."],
+      8:[35,"Difficult","Rahu in the 8th is intense, secretive, crisis-oriented, and transformative. It can bring occult insight but also instability."],
+      9:[58,"Mixed to favorable","Rahu questions belief systems, teachers, religion, and destiny. It may create foreign philosophies or unconventional luck."],
+      10:[88,"Very strong","Rahu is powerful in the 10th for public life, career ambition, visibility, technology, politics, and unusual authority paths."],
+      11:[90,"Very strong","Rahu is excellent for gains, networks, audience, large groups, and ambition. It can produce big desires and big reach."],
+      12:[40,"Weak to spiritualized","Rahu in the 12th can bring isolation, foreign lands, vivid dreams, sleep issues, hidden desires, or spiritual escape."
+      ]
+    };
+    const signTone = {
+      Aries:["fiery",8,"bold, impulsive, competitive, self-starting"],
+      Taurus:["earthy",4,"material, sensual, security-seeking, fixed"],
+      Gemini:["airy",10,"verbal, curious, clever, media-oriented"],
+      Cancer:["watery",5,"emotional, protective, memory-driven, security-seeking"],
+      Leo:["fiery",7,"visible, proud, creative, authority-oriented"],
+      Virgo:["earthy",9,"analytical, technical, anxious, problem-solving"],
+      Libra:["airy",7,"social, aesthetic, diplomatic, relationship-focused"],
+      Scorpio:["watery",3,"intense, secretive, obsessive, transformative"],
+      Sagittarius:["fiery",6,"ideological, philosophical, restless, truth-seeking"],
+      Capricorn:["earthy",8,"strategic, ambitious, institutional, disciplined"],
+      Aquarius:["airy",10,"networked, technological, outsider-oriented, future-focused"],
+      Pisces:["watery",5,"imaginative, spiritual, escapist, boundless"]
+    };
+
+    const planetStrengthByAsc = {
+      Aries: {
+        Sun:["Strong benefic","benefic","Rules the 5th house of intelligence, merit, creativity, and children."],
+        Moon:["Benefic","benefic","Rules the 4th house of home, peace, mother, and emotional stability."],
+        Mars:["Strong benefic","benefic","Rules the 1st and 8th; as ascendant lord, Mars supports vitality and identity despite 8th-house intensity."],
+        Mercury:["Strong malefic","malefic","Rules the 3rd and 6th houses, giving conflict, effort, debts, and competition."],
+        Jupiter:["Strong benefic","benefic","Rules the 9th and 12th; the 9th-house rulership makes Jupiter highly supportive for luck and dharma."],
+        Venus:["Strong malefic","malefic","Rules the 2nd and 7th maraka houses, increasing attachment and relationship/material karma."],
+        Saturn:["Mixed / slightly malefic","mixedp","Rules the 10th and 11th; good for work and gains, but can be heavy and desire-driven."]
+      },
+      Taurus: {
+        Sun:["Malefic","malefic","Rules the 4th house; can disturb peace when afflicted, though it supports property and authority at home."],
+        Moon:["Slightly malefic","malefic","Rules the 3rd house of effort, restlessness, and siblings."],
+        Mars:["Strong malefic","malefic","Rules the 7th and 12th, bringing partnership conflict, expenses, and foreign/bedroom karma."],
+        Mercury:["Benefic","benefic","Rules the 2nd and 5th; supports intelligence, speech, wealth, and creativity."],
+        Jupiter:["Strong malefic","malefic","Rules the 8th and 11th, creating sudden changes, obsessions, and gain-related complications."],
+        Venus:["Benefic / ascendant lord","benefic","Rules the 1st and 6th; ascendant rulership protects, though the 6th adds work and conflict themes."],
+        Saturn:["Strong benefic / yogakaraka","benefic","Rules the 9th and 10th houses, combining dharma and career power."]
+      },
+      Gemini: {
+        Sun:["Slightly malefic","malefic","Rules the 3rd house of effort, competition, and restlessness."],
+        Moon:["Maraka / malefic","malefic","Rules the 2nd house of speech, money, family, and maraka themes."],
+        Mars:["Strong malefic","malefic","Rules the 6th and 11th, intensifying conflict, competition, desires, and gains."],
+        Mercury:["Strong benefic","benefic","Rules the 1st and 4th, supporting identity, intelligence, learning, and peace."],
+        Jupiter:["Mixed / maraka","mixedp","Rules the 7th and 10th; useful for status and partnership but can become maraka or over-expansive."],
+        Venus:["Strong benefic","benefic","Rules the 5th and 12th; the 5th makes Venus supportive for creativity and merit."],
+        Saturn:["Mixed","mixedp","Rules the 8th and 9th; dharma is present, but mixed with delay, transformation, and hidden karma."]
+      },
+      Cancer: {
+        Sun:["Maraka / neutral-malefic","mixedp","Rules the 2nd house of money, speech, family, and maraka themes."],
+        Moon:["Strong benefic","benefic","Rules the ascendant, supporting vitality, body, and selfhood."],
+        Mars:["Strong benefic / yogakaraka","benefic","Rules the 5th and 10th houses, combining merit, creativity, career, and authority."],
+        Mercury:["Strong malefic","malefic","Rules the 3rd and 12th, bringing restlessness, expenses, isolation, and effort."],
+        Jupiter:["Benefic","benefic","Rules the 6th and 9th; the 9th-house rulership gives protection, even with 6th-house challenges."],
+        Venus:["Malefic","malefic","Rules the 4th and 11th, mixing comfort with desire, gains, and attachment."],
+        Saturn:["Strong malefic / maraka","malefic","Rules the 7th and 8th, intensifying relationship pressure and sudden transformation."]
+      },
+      Leo: {
+        Sun:["Strong benefic","benefic","Rules the ascendant, supporting identity, vitality, and authority."],
+        Moon:["Slightly malefic","malefic","Rules the 12th house of loss, sleep, foreign places, and isolation."],
+        Mars:["Strong benefic / yogakaraka","benefic","Rules the 4th and 9th, combining inner stability, luck, dharma, and protection."],
+        Mercury:["Malefic / maraka","malefic","Rules the 2nd and 11th, increasing desire, speech karma, money focus, and maraka themes."],
+        Jupiter:["Benefic","benefic","Rules the 5th and 8th; the 5th gives wisdom and merit, while the 8th adds depth."],
+        Venus:["Strong malefic","malefic","Rules the 3rd and 10th; career can benefit, but Venus carries restlessness and ambition pressure."],
+        Saturn:["Strong malefic / maraka","malefic","Rules the 6th and 7th, bringing conflict, duty, and partnership tests."]
+      },
+      Virgo: {
+        Sun:["Malefic","malefic","Rules the 12th house of loss, sleep, foreign lands, and expenses."],
+        Moon:["Malefic","malefic","Rules the 11th house of desires, gains, networks, and ambitions."],
+        Mars:["Strong malefic","malefic","Rules the 3rd and 8th, producing conflict, accidents, intensity, and restless effort."],
+        Mercury:["Strong benefic","benefic","Rules the 1st and 10th, supporting intelligence, career, skill, and identity."],
+        Jupiter:["Mixed / maraka","mixedp","Rules the 4th and 7th; supports home and partnership but carries maraka/relationship karma."],
+        Venus:["Strong benefic","benefic","Rules the 2nd and 9th; the 9th gives luck, dharma, grace, and protection."],
+        Saturn:["Mixed / slightly benefic","mixedp","Rules the 5th and 6th; good for discipline and learning, but mixed with work and conflict."]
+      },
+      Libra: {
+        Sun:["Malefic","malefic","Rules the 11th house of gains, desires, networks, and ambition."],
+        Moon:["Neutral / career planet","neutralp","Rules the 10th house of career, visibility, and public role."],
+        Mars:["Strong malefic / maraka","malefic","Rules the 2nd and 7th maraka houses, intensifying speech, money, and relationship karma."],
+        Mercury:["Benefic","benefic","Rules the 9th and 12th; the 9th gives luck and dharma, while the 12th adds retreat or foreign themes."],
+        Jupiter:["Strong malefic","malefic","Rules the 3rd and 6th, bringing conflict, effort, competition, and debts."],
+        Venus:["Benefic / ascendant lord","benefic","Rules the 1st and 8th; ascendant lord protects, though the 8th adds transformation."],
+        Saturn:["Strong benefic / yogakaraka","benefic","Rules the 4th and 5th, combining emotional foundation, intelligence, creativity, and merit."]
+      },
+      Scorpio: {
+        Sun:["Strong benefic","benefic","Rules the 10th house of career, authority, status, and visibility."],
+        Moon:["Strong benefic","benefic","Rules the 9th house of luck, dharma, teachers, and blessings."],
+        Mars:["Benefic / ascendant lord","benefic","Rules the 1st and 6th; protects identity while giving fighting power and problem-solving."],
+        Mercury:["Strong malefic","malefic","Rules the 8th and 11th, creating sudden changes, obsession, and desire-driven complications."],
+        Jupiter:["Benefic","benefic","Rules the 2nd and 5th, supporting speech, wealth, intelligence, and creativity."],
+        Venus:["Strong malefic / maraka","malefic","Rules the 7th and 12th, increasing relationship, pleasure, loss, and attachment themes."],
+        Saturn:["Malefic","malefic","Rules the 3rd and 4th, mixing effort, heaviness, home, and emotional pressure."]
+      },
+      Sagittarius: {
+        Sun:["Strong benefic","benefic","Rules the 9th house of dharma, luck, father, teachers, and higher wisdom."],
+        Moon:["Malefic","malefic","Rules the 8th house of crisis, secrets, sudden change, and transformation."],
+        Mars:["Benefic","benefic","Rules the 5th and 12th; the 5th supports creativity, merit, and intelligence."],
+        Mercury:["Strong malefic / maraka","malefic","Rules the 7th and 10th; useful professionally, but carries partnership and maraka pressure."],
+        Jupiter:["Strong benefic","benefic","Rules the 1st and 4th, supporting self, wisdom, peace, and emotional foundation."],
+        Venus:["Strong malefic","malefic","Rules the 6th and 11th, bringing conflict, desire, debts, and gain-related pressure."],
+        Saturn:["Malefic","malefic","Rules the 2nd and 3rd, bringing speech, money, effort, and maraka-related heaviness."]
+      },
+      Capricorn: {
+        Sun:["Strong malefic","malefic","Rules the 8th house of crisis, secrets, sudden changes, and vulnerability."],
+        Moon:["Maraka / malefic","malefic","Rules the 7th house of marriage, public dealings, and maraka themes."],
+        Mars:["Malefic","malefic","Rules the 4th and 11th, mixing property/peace with ambition, gains, and desires."],
+        Mercury:["Benefic","benefic","Rules the 6th and 9th; the 9th gives protection, luck, and dharma despite 6th-house issues."],
+        Jupiter:["Malefic","malefic","Rules the 3rd and 12th, creating effort, expenses, isolation, and restlessness."],
+        Venus:["Strong benefic / yogakaraka","benefic","Rules the 5th and 10th, combining creativity, intelligence, career, and authority."],
+        Saturn:["Strong benefic / ascendant lord","benefic","Rules the 1st and 2nd, supporting identity, endurance, resources, and structure."]
+      },
+      Aquarius: {
+        Sun:["Maraka / malefic","malefic","Rules the 7th house of partnership, public dealings, and maraka themes."],
+        Moon:["Malefic","malefic","Rules the 6th house of conflict, debts, service, and health routines."],
+        Mars:["Malefic","malefic","Rules the 3rd and 10th, giving effort, ambition, career drive, and pressure."],
+        Mercury:["Benefic","benefic","Rules the 5th and 8th; the 5th gives intelligence and merit, while the 8th adds depth."],
+        Jupiter:["Malefic","malefic","Rules the 2nd and 11th, increasing money, speech, gains, and desire karma."],
+        Venus:["Strong benefic / yogakaraka","benefic","Rules the 4th and 9th, combining peace, home, luck, dharma, and grace."],
+        Saturn:["Benefic / ascendant lord","benefic","Rules the 1st and 12th; protects the self while adding solitude, foreign, or spiritual themes."]
+      },
+      Pisces: {
+        Sun:["Malefic","malefic","Rules the 6th house of conflict, debts, health routines, and service."],
+        Moon:["Benefic","benefic","Rules the 5th house of creativity, intelligence, children, and merit."],
+        Mars:["Strong benefic","benefic","Rules the 2nd and 9th; the 9th gives luck and protection, while the 2nd supports resources."],
+        Mercury:["Strong malefic / maraka","malefic","Rules the 4th and 7th; useful for home and partnership, but carries maraka relationship karma."],
+        Jupiter:["Strong benefic","benefic","Rules the 1st and 10th, supporting identity, wisdom, career, and public reputation."],
+        Venus:["Strong malefic","malefic","Rules the 3rd and 8th, bringing desire, secrecy, conflict, and sudden change."],
+        Saturn:["Malefic","malefic","Rules the 11th and 12th, mixing gains/desires with loss, isolation, and expenditure."]
+      }
+    };
+
+
+    const asc = document.getElementById('ascendant');
+    const rahuSign = document.getElementById('rahuSign');
+    const rahuHouse = document.getElementById('rahuHouse');
+
+    signs.forEach(s => {
+      asc.add(new Option(s, s));
+      rahuSign.add(new Option(s, s));
+    });
+    for (let i=1; i<=12; i++) rahuHouse.add(new Option(`${i}${suffix(i)} House`, i));
+
+    asc.value = "Libra";
+    rahuSign.value = "Cancer";
+    rahuHouse.value = "10";
+
+    function suffix(n){ return n===1?'st':n===2?'nd':n===3?'rd':'th'; }
+    function signForHouse(ascSign, house){ return signs[(signs.indexOf(ascSign) + house - 1) % 12]; }
+    function houseForSign(ascSign, sign){ return ((signs.indexOf(sign) - signs.indexOf(ascSign) + 12) % 12) + 1; }
+
+    function scoreLabel(score){
+      if(score >= 85) return ["very strong", "good"];
+      if(score >= 70) return ["strong", "good"];
+      if(score >= 55) return ["moderate", "warn"];
+      if(score >= 42) return ["mixed / unstable", "warn"];
+      return ["weak / difficult", "bad"];
+    }
+
+
+    function renderPlanetStrengths(ascSign){
+      const box = document.getElementById('planetStrengths');
+      document.getElementById('planetTitle').textContent = `${ascSign} Ascendant: functional benefics, malefics, and neutrals`;
+      box.innerHTML = '';
+      const data = planetStrengthByAsc[ascSign];
+      Object.entries(data).forEach(([planet, info]) => {
+        const card = document.createElement('div');
+        card.className = `planet-card ${info[1]}`;
+        card.innerHTML = `<strong>${planet}</strong><div class="kind">${info[0]}</div><div class="why">${info[2]}</div>`;
+        box.appendChild(card);
+      });
+    }
+
+    function render(){
+      const a = asc.value;
+      renderPlanetStrengths(a);
+      const rs = rahuSign.value;
+      const rh = Number(rahuHouse.value);
+      const naturalHouse = houseForSign(a, rs);
+      const expectedSign = signForHouse(a, rh);
+      const mismatch = expectedSign !== rs;
+
+      document.getElementById('tableTitle').textContent = `${a} Ascendant: whole-sign house rulerships`;
+      const tbody = document.getElementById('houseTable');
+      tbody.innerHTML = '';
+      for(let h=1; h<=12; h++){
+        const s = signForHouse(a,h);
+        const tr = document.createElement('tr');
+        if(h === rh || s === rs) tr.className = 'active';
+        tr.innerHTML = `<td>${h}${suffix(h)}</td><td>${s}</td><td>${houseThemes[h]}</td><td>${rulers[s]}</td>`;
+        tbody.appendChild(tr);
+      }
+
+      const base = houseStrength[rh];
+      const tone = signTone[rs];
+      let score = Math.max(5, Math.min(100, base[0] + tone[1] - 6));
+      const [label, cls] = scoreLabel(score);
+      const dispositor = rulers[rs];
+      const realHouseSign = signForHouse(a, rh);
+      const consistencyText = mismatch
+        ? `Note: in whole-sign houses, ${rs} is naturally the ${naturalHouse}${suffix(naturalHouse)} house for ${a} Ascendant, while the ${rh}${suffix(rh)} house is ${realHouseSign}. Your selected sign/house combination is treated as custom data rather than a standard whole-sign placement.`
+        : `For ${a} Ascendant, ${rs} correctly maps to the ${rh}${suffix(rh)} house by whole-sign houses.`;
+
+      const behavior = `Rahu behaves through the ${rh}${suffix(rh)} house topics: ${houseThemes[rh]}. In ${rs}, it acts in a ${tone[0]} way: ${tone[2]}. Its dispositor is ${dispositor}, so the condition of ${dispositor} becomes very important.`;
+
+      const summary = document.getElementById('summary');
+      summary.innerHTML = `
+        <div class="pillrow">
+          <span class="pill accent">${a} Ascendant</span>
+          <span class="pill">Rahu in ${rs}</span>
+          <span class="pill">${rh}${suffix(rh)} House</span>
+          <span class="pill ${cls}">${label}</span>
+        </div>
+        <div class="scorebox">
+          <div class="score" style="--score:${score}"><span>${score}</span></div>
+          <div><strong>${base[1]}</strong><br><span style="color:var(--muted)">Estimated Rahu strength based on house placement, adjusted by sign tone.</span></div>
+        </div>
+        <div class="section"><h3>House strength</h3><p>${base[2]}</p></div>
+        <div class="section"><h3>How Rahu behaves</h3><p>${behavior}</p></div>
+        <div class="section"><h3>Ascendant logic</h3><p>${consistencyText}</p></div>
+        <div class="section"><h3>Simple prediction style</h3><p>This Rahu seeks growth through ${houseThemes[rh]}. It may bring unusual people, foreign influence, ambition, obsession, sudden opportunities, and dissatisfaction until the person learns to handle the house consciously.</p></div>
+      `;
+    }
+
+    [asc, rahuSign, rahuHouse].forEach(el => el.addEventListener('change', render));
+    render();
+  </script>
+</body>
+</html>
